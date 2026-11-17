@@ -46,14 +46,6 @@ DELETION_METHODS: dict[str, dict[str, str]] = {
         "copilot": "Delete all memory",
     },
     "use a privacy dashboard": {"copilot": "Privacy Dashboard"},
-    "most extensive procedure": {
-        "chatgpt": "MAXIMAL",
-        "claude": "MAXIMAL",
-        "gemini": "MAXIMAL",
-        "copilot": "MAXIMAL",
-        "perplexity": "Delete all threads",
-        "deepseek": "MAXIMAL",
-    },
 }
 
 PROMPT_DELETION_METHODS = ("deletion-request prompt",)

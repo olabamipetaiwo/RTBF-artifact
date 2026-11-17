@@ -1,0 +1,13 @@
+Test case ID,Agent,Injection method,Deletion method,Account
+Q-CH-1,chatgpt,prompt,deletion-request prompt,
+Q-CH-2,chatgpt,prompt,delete a single conversation,
+Q-CL-1,claude,prompt,deletion-request prompt,
+Q-CL-2,claude,prompt,delete a single conversation,
+Q-GE-1,gemini,prompt,deletion-request prompt,
+Q-GE-2,gemini,prompt,delete a single conversation,
+Q-CO-1,copilot,prompt,deletion-request prompt,
+Q-CO-2,copilot,prompt,delete a single conversation,
+Q-PE-1,perplexity,prompt,deletion-request prompt,
+Q-PE-2,perplexity,prompt,delete a single conversation,
+Q-DE-1,deepseek,prompt,deletion-request prompt,
+Q-DE-2,deepseek,prompt,delete a single conversation,
