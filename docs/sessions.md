@@ -38,6 +38,8 @@ Repeat for every agent you will test.
    | Perplexity | `sessions/cookies_perplexity.json` |
    | DeepSeek | `sessions/cookies_deepseek.json` |
 
+> **Copilot:** we recommend running Copilot in your own Chrome window instead of a cookie session, because Copilot asks a pipeline-launched browser to verify you are human on every message. See "Copilot: use your own Chrome" in the README. The cookie steps below still work if you prefer them.
+
 ## 3. Copilot and DeepSeek: also copy localStorage
 
 These two keep part of the login in the page's localStorage, which cookies do not cover.

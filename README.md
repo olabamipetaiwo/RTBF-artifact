@@ -49,7 +49,7 @@ Use only accounts that you own. A full run takes more than a month, because the 
 
 ChatGPT, Claude, Copilot, and Perplexity show a bot check (such as Cloudflare's "Just a moment..." page) to any browser that Playwright controls, even when you are logged in. For these four agents the pipeline uses `playwright-stealth`, which hides those automation signals so it can run on your own logged-in account, as we did in the study. It is installed with the other dependencies; you do not need to do anything.
 
-**1. Log in.** Most agents block logins made by an automated browser, so you log in with your everyday Chrome and copy that login over. `docs/sessions.md` walks you through it: you install the Cookie-Editor extension, export each agent's cookies into its empty file in `sessions/`, and run `python import_cookies.py <agent>`.
+**1. Log in.** Most agents block logins made by an automated browser, so you log in with your everyday Chrome and copy that login over. `docs/sessions.md` walks you through it: you install the Cookie-Editor extension, export each agent's cookies into its empty file in `sessions/`, and run `python import_cookies.py <agent>`. For Copilot, use your own Chrome window instead (see "Copilot: use your own Chrome" below).
 
 **2. Describe your test cases.** Make a copy of `examples/design.csv` and edit it. Each row is one test case: an ID of your choice, the agent, how the fact is injected, and how it is deleted (`docs/workbook.md` lists the allowed values). Then create the workbook and generate a synthetic fact for each test case:
 
@@ -57,6 +57,8 @@ ChatGPT, Claude, Copilot, and Perplexity show a bot check (such as Cloudflare's 
 python pipeline.py init --design my_design.csv
 python pipeline.py generate
 ```
+
+To add more test cases later without touching the existing ones, put them in another CSV file and run `python pipeline.py add --design more.csv`, then `python pipeline.py generate` again; it fills only the new rows.
 
 **3. Add deletion requests.** Skip this step if none of your test cases use a deletion-request prompt. Otherwise, write the requests in a CSV file with a single column named `request`, putting `{entity}` wherever the request should name the injected item (see `examples/example_requests.csv`). The pipeline groups the requests by what they ask to delete and draws a sample from each group. `--target` is how many requests to draw in total, and `--floor` is the minimum taken from each group:
 
@@ -89,15 +91,52 @@ Two deletion methods cannot be automated. Do them yourself in your everyday brow
 
 Some deletion methods, including these two, erase everything on the account, not only the test case's fact. Give each such test case its own account, so it does not wipe out the facts of your other test cases; "Second account" in `docs/sessions.md` explains how.
 
+### Copilot: use your own Chrome
+
+Copilot shows a "Verify you are human" check to every browser the pipeline launches, often on every message. As in the study, run Copilot in a Chrome window that you open yourself, which the pipeline then controls. Copilot does not need a session file in this mode.
+
+**1. Open a Chrome window the pipeline can connect to.** Copy the whole line for your system into a terminal. It starts a separate Chrome with its own profile in a `didr-chrome` folder in your home folder, so your everyday Chrome profile is not touched (Chrome allows remote control only of a separate profile).
+
+macOS:
+```
+open -na "Google Chrome" --args --remote-debugging-port=9222 --user-data-dir="$HOME/didr-chrome"
+```
+Windows (PowerShell):
+```
+& "C:\Program Files\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9222 --user-data-dir="$env:USERPROFILE\didr-chrome"
+```
+Linux:
+```
+google-chrome --remote-debugging-port=9222 --user-data-dir="$HOME/didr-chrome"
+```
+
+**2. Log in.** In that new window, open https://copilot.com, log in to the account for your Copilot test cases, and leave the tab open. The window keeps the login, so next time you only reopen it with the same command.
+
+**3. Point the pipeline at it** in the terminal where you run the pipeline, then run the stages as usual:
+
+macOS and Linux:
+```
+export DIDR_COPILOT_CDP=http://localhost:9222
+python pipeline.py inject <Copilot IDs>
+```
+Windows (PowerShell):
+```
+$env:DIDR_COPILOT_CDP = "http://localhost:9222"
+python pipeline.py inject <Copilot IDs>
+```
+
+The setting stays on until you close that terminal, and it only affects Copilot. The pipeline uses whichever account is logged in in that window and ignores the workbook's Account column for Copilot, so for a test case on a second account, log that account in before running it. If "Verify you are human" still appears, tick it in the window; the pipeline waits up to five minutes.
+
 ### When something goes wrong
 
 A failed test case prints `FAILED` and the reason, and is left at its current stage, so you can fix the cause and rerun the same command for that ID.
 
 - **The agent's page has changed.** This is the most common failure. It shows up as `TimeoutError ... waiting for locator(...)` or as a message that a button or conversation was not found. Look at the step's screenshot in `results/<agent>/<ID>/screenshots/`, then update the matching function in `flows/<agent>.py`: `send_message` for typing a message, `read_memory_settings` for the saved-memory page, and, for a deletion, the function that the `ERASURE_DISPATCH` table at the top of the file names for that deletion method. Most fixes only change a button label or a page address. During our own test run in November 2026, ChatGPT, Claude, and Perplexity had each changed at least one of these since the study.
+- **An injection refuses to send.** The pipeline starts every injection in a new, empty conversation and stops if the agent reopens an old one, or if the conversation turns out to be one that another test case already used. Two facts in one conversation would make both test cases invalid, because deleting that conversation removes both.
 - **A deletion refuses to run.** When the pipeline cannot find exactly the conversation it injected, it stops instead of deleting the nearest one, so it never deletes another test case's data. Check that the conversation still exists and that the agent's sidebar or library has loaded.
 - **A same-conversation check ended in `ERROR`.** If the cause was technical (for example, the session expired during recall), fix it and run `python pipeline.py recall <ID> --retry-same-conversation`. This repeats only that check, because asking about the fact again in new conversations would change what the agent has seen.
 - **The run reports that the session is logged out.** The session has expired. Export the cookies again and rerun `python import_cookies.py <agent>` (see `docs/sessions.md`). DeepSeek can log a copied session out within an hour, so export its cookies and localStorage just before each stage.
-- **Copilot asks you to "Verify you are human".** Copilot often shows this checkbox after a message is typed. The pipeline prints `>>> ACTION NEEDED` and waits up to five minutes; tick the box in the Chrome window yourself and the run continues. Stay at the screen while running Copilot test cases. The pipeline never ticks the box for you.
+- **Copilot asks you to "Verify you are human" on every message.** Run Copilot in your own Chrome window ("Copilot: use your own Chrome" above). When the box appears, the pipeline prints `>>> ACTION NEEDED` and waits up to five minutes for you to tick it; it never ticks the box itself.
 - **Any other bot check ("Just a moment...") appears.** Export fresh cookies from your everyday Chrome and rerun.
 - **The agent replies with an error such as "Something went wrong".** The agent is overloaded or has hit its daily limit. Wait a few hours and rerun; the pipeline does not count such a reply as an answer.
 - **`No space left on device`, or Chrome fails to start.** Each run starts a fresh Chrome profile, which needs some free disk space. Free a few gigabytes and rerun.

@@ -108,6 +108,9 @@ class CopilotFlow(PlatformFlow):
     def new_conversation(self) -> None:
         self.page.goto(self.BASE_URL + "chat")
         self.page.wait_for_timeout(1500)
+        if self._reply_count() > 0:  # Copilot reopened the last conversation
+            self.page.get_by_role("link", name="New chat").first.click()
+            self.page.wait_for_timeout(1500)
 
     def _reply_count(self) -> int:
         return len(self.page.query_selector_all(self._reply_selector()))

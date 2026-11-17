@@ -229,3 +229,22 @@ def test_ui_action_ignores_same_conversation():
     classify = pipeline.stage("5_classification", "classify")
     row = {"Direct recall result": "NOT FOUND (auto)", "Same-conversation result": "TOKEN FOUND (auto)"}
     assert classify.classify_row(row, D2) == "recall failed"
+
+
+def test_add_appends_new_test_cases_and_rejects_duplicates(wb_path, tmp_path):
+    before = [tc.id for tc in workbook.test_cases()]
+    design = tmp_path / "more.csv"
+    design.write_text("Test case ID,Agent,Injection method,Deletion method,Account\n"
+                      "NEW-01,chatgpt,prompt,delete a single conversation,\n")
+    pipeline.main(["add", "--design", str(design)])
+    assert [tc.id for tc in workbook.test_cases()] == before + ["NEW-01"]
+    with pytest.raises(SystemExit, match="already in the workbook"):
+        pipeline.main(["add", "--design", str(design)])
+
+
+def test_injection_refuses_a_conversation_another_test_case_used(wb_path):
+    inject = pipeline.stage("2_injection", "inject")
+    tracking.mark_injected("CH-01", "https://example/chat/1?from=a")
+    with pytest.raises(RuntimeError, match="same conversation as CH-01"):
+        inject._require_unique_ref("https://example/chat/1?from=b", "CH-02")
+    inject._require_unique_ref("https://example/chat/2", "CH-02")

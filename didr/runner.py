@@ -28,6 +28,8 @@ class FlowNotStarted(RuntimeError):
 
 
 def open_flow(agent: str, account: str | None):
+    if agent == "copilot" and config.COPILOT_CDP_URL:
+        return CopilotFlow(cdp_url=config.COPILOT_CDP_URL)
     try:
         return FLOWS[agent](session_label=account)
     except FileNotFoundError as exc:

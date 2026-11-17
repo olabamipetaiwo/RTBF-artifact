@@ -15,6 +15,9 @@ SESSIONS_DIR = Path(os.getenv("DIDR_SESSIONS_DIR", ROOT / "sessions"))
 RESULTS_DIR = Path(os.getenv("DIDR_RESULTS_DIR", ROOT / "results"))
 STATE_DIR = ROOT / "data" / "state"
 HEADLESS = os.getenv("DIDR_HEADLESS", "0") == "1"
+# Copilot shows a "Verify you are human" check to a freshly launched browser.
+# Set this to drive your own Chrome instead (README, "Copilot: use your own Chrome").
+COPILOT_CDP_URL = os.getenv("DIDR_COPILOT_CDP") or None
 
 PLATFORMS = {
     "chatgpt": "https://chatgpt.com/auth/login",

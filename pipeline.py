@@ -25,21 +25,34 @@ def stage(folder: str, module: str):
     return mod
 
 
+def _add_rows(path, design: str) -> None:
+    """Append the design's test cases below the existing rows."""
+    import openpyxl
+    with open(design, newline="") as f:
+        rows = [r for r in csv.DictReader(f) if r.get("Test case ID")]
+    existing = {tc.id for tc in workbook.test_cases(path)}
+    if clash := sorted(existing & {r["Test case ID"].strip() for r in rows}):
+        raise SystemExit(f"Test case IDs already in the workbook: {', '.join(clash)}")
+    wb = openpyxl.load_workbook(path)
+    ws = wb[workbook.SHEET]
+    first = ws.max_row + 1 if existing else 2
+    for r, row in enumerate(rows, start=first):
+        for header in workbook.USER_COLUMNS:
+            if row.get(header):
+                ws.cell(row=r, column=workbook.COLUMNS[header], value=row[header].strip())
+    wb.save(path)
+    print(f"Added {len(rows)} test cases from {design}")
+
+
 def cmd_init(a) -> None:
     path = workbook.create(overwrite=a.overwrite)
     print(f"Created {path}")
     if a.design:
-        with open(a.design, newline="") as f:
-            rows = [r for r in csv.DictReader(f) if r.get("Test case ID")]
-        import openpyxl
-        wb = openpyxl.load_workbook(path)
-        ws = wb[workbook.SHEET]
-        for r, row in enumerate(rows, start=2):
-            for header in workbook.USER_COLUMNS:
-                if row.get(header):
-                    ws.cell(row=r, column=workbook.COLUMNS[header], value=row[header].strip())
-        wb.save(path)
-        print(f"Added {len(rows)} test cases from {a.design}")
+        _add_rows(path, a.design)
+
+
+def cmd_add(a) -> None:
+    _add_rows(config.WORKBOOK_PATH, a.design)
 
 
 def cmd_generate(a) -> None:
@@ -108,7 +121,7 @@ def cmd_status(a) -> None:
         print(f"{tc.id}: {e['status']} -- {note}")
 
 
-def main() -> None:
+def main(argv: list[str] | None = None) -> None:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = p.add_subparsers(dest="cmd", required=True)
 
@@ -140,6 +153,10 @@ def main() -> None:
     s.add_argument("--manual", action="store_true", help="record a deletion performed by hand")
     s.set_defaults(fn=cmd_delete)
 
+    s = sub.add_parser("add", help="append test cases to an existing workbook")
+    s.add_argument("--design", required=True, help="CSV with Test case ID, Agent, Injection method, Deletion method, Account")
+    s.set_defaults(fn=cmd_add)
+
     s = sub.add_parser("recall", help="stage 4: data recall (default: all due)")
     s.add_argument("ids", nargs="*")
     s.add_argument("--force", action="store_true", help="run before the 30-day wait has passed")
@@ -153,7 +170,7 @@ def main() -> None:
     s = sub.add_parser("status", help="show stage and due times")
     s.set_defaults(fn=cmd_status)
 
-    a = p.parse_args()
+    a = p.parse_args(argv)
     a.fn(a)
 
 

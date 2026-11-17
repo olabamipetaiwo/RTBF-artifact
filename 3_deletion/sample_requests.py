@@ -8,7 +8,7 @@ import re
 from collections import Counter, defaultdict
 from pathlib import Path
 
-from didr import config, methods, workbook
+from didr import config, methods, workbook, tracking
 
 GROUP_PATTERNS: list[tuple[str, str]] = [
     ("backend_db", r"\b(database|data ?base|server|backend|back-end|training (data|set)|all available files|"
@@ -68,7 +68,9 @@ def sample(requests_csv: Path, target: int = 120, floor: int = 15, seed: int = 4
         picked = [r for r in picked if r["group"] != ALL_DATA_GROUP]
     _save_sample(picked)
 
-    targets = [tc for tc in workbook.test_cases(path) if tc["Deletion method"] in methods.PROMPT_DELETION_METHODS]
+    # Test cases already injected keep the request they were run with.
+    targets = [tc for tc in workbook.test_cases(path)
+               if tc["Deletion method"] in methods.PROMPT_DELETION_METHODS and not tracking.get(tc.id)]
     if missing := [tc.id for tc in targets if not tc["Entity"]]:
         raise SystemExit(f"Run `generate` first; no entity yet for {missing[:5]}")
     updates = {
