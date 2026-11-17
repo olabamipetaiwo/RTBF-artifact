@@ -2,7 +2,7 @@
 
 The pipeline drives each agent while logged in to your account. Most agents block logins performed by an automated browser (Google sign-in rejection, Cloudflare checks), so log in in your everyday Chrome and copy that login into the pipeline with the Cookie-Editor extension.
 
-The files below hold live login tokens once filled. Do not commit, share, or paste them anywhere else.
+`sessions/` holds an empty file for each export below. Once filled, these files hold live login tokens: never commit, share, or paste them anywhere else.
 
 ## 1. Install Cookie-Editor
 

@@ -16,5 +16,10 @@ fi
 .venv/bin/python -m pip install -r requirements.txt --quiet
 .venv/bin/python -c "import nltk; nltk.download('wordnet', quiet=True)"
 
+# Empty files for the Cookie-Editor exports (docs/sessions.md). Existing files are kept.
+for f in cookies_chatgpt.json cookies_claude.json cookies_gemini.json cookies_copilot.json cookies_perplexity.json cookies_deepseek.json localstorage_copilot.json localstorage_deepseek.json; do
+  [ -e "sessions/$f" ] || : > "sessions/$f"
+done
+
 echo
 echo "Done. Activate the environment with:  source .venv/bin/activate"
