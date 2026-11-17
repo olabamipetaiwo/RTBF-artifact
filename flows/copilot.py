@@ -630,7 +630,7 @@ class CopilotFlow(PlatformFlow):
             "asks for a passkey or security-key step-up that automation cannot "
             "complete, and its 'Delete all activity history' acts on the whole "
             "account. Perform it by hand in a normal browser, then record it "
-            "with `python pipeline.py delete <ID> --manual`."
+            "with `python scripts/pipeline.py delete <ID> --manual`."
         )
 
     def _erase_maximal(self, token: str, injection_text: str = "", ref: str | None = None) -> None:

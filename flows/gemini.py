@@ -182,7 +182,7 @@ class GeminiFlow(PlatformFlow):
         raise NotImplementedError(
             "Gemini's 'Delete all activity' page (myactivity.google.com) "
             "rejects automated browsers. Perform this deletion by hand in a "
-            "normal browser, then record it with `python pipeline.py delete "
+            "normal browser, then record it with `python scripts/pipeline.py delete "
             "<ID> --manual`."
         )
 

@@ -11,6 +11,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT / "scripts"))
 
 import pipeline  # noqa: E402
 from didr import config, tracking, workbook  # noqa: E402

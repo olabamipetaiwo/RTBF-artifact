@@ -41,7 +41,7 @@ class PlatformFlow:
             raise FileNotFoundError(
                 f"No saved session for {self.platform!r}"
                 f"{f' (label {session_label!r})' if session_label else ''}: follow docs/sessions.md, "
-                f"then run `python import_cookies.py {self.platform}{label_hint.replace('--label', '--account')}`."
+                f"then run `python scripts/import_cookies.py {self.platform}{label_hint.replace('--label', '--account')}`."
             )
         self._session_path = session
         self._headless = config.HEADLESS if headless is None else headless
@@ -86,7 +86,7 @@ class PlatformFlow:
         if any(marker in url for marker in self.SIGN_IN_URL_MARKERS):
             raise RuntimeError(
                 f"{self.platform} session is logged out (redirected to {self.page.url.split('?')[0]}). "
-                f"Export the cookies again and rerun `python import_cookies.py {self.platform}` (docs/sessions.md)."
+                f"Export the cookies again and rerun `python scripts/import_cookies.py {self.platform}` (docs/sessions.md)."
             )
 
     def _verify_logged_in(self) -> None:

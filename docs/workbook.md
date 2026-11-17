@@ -1,6 +1,6 @@
 # Workbook
 
-`data/DIDR Test Cases.xlsx`, sheet `TEST CASES`, one row per test case. Create with `python pipeline.py init [--design file.csv]`. Transcripts and screenshots go to `results/<agent>/<ID>/`.
+`data/DIDR Test Cases.xlsx`, sheet `TEST CASES`, one row per test case. Create with `python scripts/pipeline.py init [--design file.csv]`. Transcripts and screenshots go to `results/<agent>/<ID>/`.
 
 ## You fill
 

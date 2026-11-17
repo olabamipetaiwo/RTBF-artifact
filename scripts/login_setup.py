@@ -1,6 +1,6 @@
 """Log in to an agent by hand once; the session is saved to sessions/ for the pipeline.
 
-Usage: python login_setup.py <agent> [--label NAME] [--from-chrome-profile [--profile DIR]]
+Usage: python scripts/login_setup.py <agent> [--label NAME] [--from-chrome-profile [--profile DIR]]
 --from-chrome-profile copies the login from your normal Chrome, for sites that reject automated sign-in.
 """
 
@@ -11,7 +11,9 @@ from pathlib import Path
 
 from playwright.sync_api import sync_playwright
 
-from didr import config
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))  # repository root
+
+from didr import config  # noqa: E402
 
 SECONDARY_DOMAINS = {
     "gemini": "https://myactivity.google.com/",
@@ -159,7 +161,7 @@ def capture_session(platform: str, wait_for_signal: bool = False, label: str | N
             print(f"NOTE: saving as a SEPARATE account (label={label!r}) -- log into a DIFFERENT account than usual.")
         print("Log in manually (handle CAPTCHA/verification/2FA as needed).")
         print("If Google rejects sign-in ('browser or app may not be secure'),")
-        print(f"stop and re-run with: python login_setup.py {platform} --from-chrome-profile")
+        print(f"stop and re-run with: python scripts/login_setup.py {platform} --from-chrome-profile")
 
         if wait_for_signal:
             print(f"Waiting for signal file {signal_path} (touched once you're logged in)...")
@@ -204,7 +206,7 @@ if __name__ == "__main__":
     args = [a for a in args if a not in ("--from-chrome-profile", "--auto")]
 
     if len(args) != 1 or args[0] not in config.PLATFORMS:
-        print(f"Usage: python login_setup.py <platform> [--from-chrome-profile [--profile <Chrome profile folder>]] [--auto] [--label <name>]")
+        print(f"Usage: python scripts/login_setup.py <platform> [--from-chrome-profile [--profile <Chrome profile folder>]] [--auto] [--label <name>]")
         print(f"--profile is the folder name under Chrome's user-data dir that holds your login (see 'Profile Path' at chrome://version); default 'Default'.")
         print(f"Platforms: {list(config.PLATFORMS)}")
         print("--label names an additional account for the same agent (the workbook's Account column).")

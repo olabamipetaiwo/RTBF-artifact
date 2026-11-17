@@ -4,9 +4,9 @@ Most agents block logins performed by an automated browser, so log in in your
 everyday Chrome instead and export that browser's cookies with the
 Cookie-Editor extension. Step-by-step instructions: docs/sessions.md.
 
-    python import_cookies.py <agent>                    # sessions/cookies_<agent>.json -> sessions/<agent>.json
-    python import_cookies.py <agent> --account LABEL    # sessions/cookies_<agent>__LABEL.json -> sessions/<agent>__LABEL.json
-    python import_cookies.py <agent> --merge DOMAIN     # add sessions/cookies_<agent>_DOMAIN.json to an existing session
+    python scripts/import_cookies.py <agent>                    # sessions/cookies_<agent>.json -> sessions/<agent>.json
+    python scripts/import_cookies.py <agent> --account LABEL    # sessions/cookies_<agent>__LABEL.json -> sessions/<agent>__LABEL.json
+    python scripts/import_cookies.py <agent> --merge DOMAIN     # add sessions/cookies_<agent>_DOMAIN.json to an existing session
 
 Copilot and DeepSeek also keep part of the login in localStorage; paste it into
 sessions/localstorage_<agent>.json and it is attached automatically.
@@ -16,9 +16,12 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 
-from didr import config
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))  # repository root
+
+from didr import config  # noqa: E402
 
 _SAMESITE = {"no_restriction": "None", "unspecified": "None", "none": "None", "lax": "Lax", "strict": "Strict"}
 
@@ -96,7 +99,7 @@ def convert(agent: str, account: str | None = None) -> None:
 def merge(agent: str, domain: str, account: str | None = None) -> None:
     out = config.session_path(agent, account)
     if not out.exists():
-        raise SystemExit(f"{out} does not exist yet: run `python import_cookies.py {agent}` first.")
+        raise SystemExit(f"{out} does not exist yet: run `python scripts/import_cookies.py {agent}` first.")
     state = json.loads(out.read_text())
     merged = {(c["name"], c["domain"], c["path"]): c for c in state.get("cookies", [])}
     for c in _cookies(config.SESSIONS_DIR / f"cookies_{agent}_{domain}.json"):

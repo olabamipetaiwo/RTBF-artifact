@@ -57,14 +57,14 @@ These two keep part of the login in the page's localStorage, which cookies do no
 
 With the virtual environment active (`source .venv/bin/activate`, see the README), run this for each agent:
 ```
-python import_cookies.py <agent>
+python scripts/import_cookies.py <agent>
 ```
 This writes `sessions/<agent>.json`, the session the pipeline loads. A warning that no login token was found means the export was taken while logged out; log in and export again.
 
 ## Further cases
 
-- **Second account** (for account-wide deletion methods, which need a dedicated account): log in to that account, paste its export into `sessions/cookies_<agent>__<label>.json` (and `localstorage_<agent>__<label>.json` for Copilot or DeepSeek), run `python import_cookies.py <agent> --account <label>`, and put `<label>` in the workbook's Account column.
-- **Second domain** (Gemini's activity page, Copilot's privacy page): log in on https://myactivity.google.com or https://account.microsoft.com/privacy, export from that tab into `sessions/cookies_<agent>_<domain>.json`, then run `python import_cookies.py <agent> --merge <domain>`.
+- **Second account** (for account-wide deletion methods, which need a dedicated account): log in to that account, paste its export into `sessions/cookies_<agent>__<label>.json` (and `localstorage_<agent>__<label>.json` for Copilot or DeepSeek), run `python scripts/import_cookies.py <agent> --account <label>`, and put `<label>` in the workbook's Account column.
+- **Second domain** (Gemini's activity page, Copilot's privacy page): log in on https://myactivity.google.com or https://account.microsoft.com/privacy, export from that tab into `sessions/cookies_<agent>_<domain>.json`, then run `python scripts/import_cookies.py <agent> --merge <domain>`.
 - **Expired session**: when a run reports a sign-in page or a logged-out session, export the cookies again and rerun step 4.
 
-`login_setup.py` (log in inside the automated browser) remains as an alternative for agents that allow it.
+`scripts/login_setup.py` (log in inside the automated browser) remains as an alternative for agents that allow it.

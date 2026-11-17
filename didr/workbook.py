@@ -98,7 +98,7 @@ def create(path: Path | None = None, overwrite: bool = False) -> Path:
 
 def _open(path: Path, read_only: bool = False):
     if not path.exists():
-        raise FileNotFoundError(f"{path} not found; create it with `python pipeline.py init`")
+        raise FileNotFoundError(f"{path} not found; create it with `python scripts/pipeline.py init`")
     wb = openpyxl.load_workbook(path, read_only=read_only, data_only=True)
     if SHEET not in wb.sheetnames:
         raise ValueError(f"{path} has no {SHEET!r} sheet")
@@ -106,7 +106,7 @@ def _open(path: Path, read_only: bool = False):
     headers = [c.value for c in next(ws.iter_rows(min_row=1, max_row=1))]
     expected = [h for _, h in LAYOUT]
     if headers[: len(expected)] != expected:
-        raise ValueError(f"{path}: header row does not match the DIDR layout; recreate it with `python pipeline.py init`")
+        raise ValueError(f"{path}: header row does not match the DIDR layout; recreate it with `python scripts/pipeline.py init`")
     return wb, ws
 
 
