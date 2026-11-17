@@ -25,6 +25,7 @@ _NEW_ROW_MORE_BY_ID = '[data-chat-history-more-button-conversation-id="{id}"]'
 
 class CopilotFlow(PlatformFlow):
     platform = "copilot"
+    USE_STEALTH = True
 
 
     MEMORY_FIELD_INJECTION_TYPES: set[str] = set()
@@ -682,6 +683,7 @@ class CopilotFlow(PlatformFlow):
                     args=["--disable-blink-features=AutomationControlled"],
                 )
                 self._context = self._browser.new_context(storage_state=str(self._session_path))
+                self._apply_stealth(self._context)
                 self.page = self._context.new_page()
                 self.page.goto(config.PLATFORMS[self.platform], wait_until="domcontentloaded")
                 self.page.wait_for_timeout(2500)

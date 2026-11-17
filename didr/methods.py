@@ -46,7 +46,6 @@ DELETION_METHODS: dict[str, dict[str, str]] = {
         "copilot": "Delete all memory",
     },
     "use a privacy dashboard": {"copilot": "Privacy Dashboard"},
-    "clear custom instructions": {"chatgpt": "Clear custom instructions"},
     "most extensive procedure": {
         "chatgpt": "MAXIMAL",
         "claude": "MAXIMAL",

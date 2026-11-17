@@ -9,7 +9,7 @@
 | Test case ID | Unique, e.g. `CH-01` |
 | Agent | `chatgpt`, `claude`, `gemini`, `copilot`, `perplexity`, `deepseek` |
 | Injection method | `prompt`, `memory-request prompt`, `UI action` |
-| Deletion method | `deletion-request prompt`, `delete a single conversation`, `clear all conversation history`, `delete a specific saved memory`, `clear all saved memories`, `use a privacy dashboard`, `clear custom instructions`, `most extensive procedure` (availability per agent: `didr/methods.py`) |
+| Deletion method | `deletion-request prompt`, `delete a single conversation`, `clear all conversation history`, `delete a specific saved memory`, `clear all saved memories`, `use a privacy dashboard`, `most extensive procedure` (availability per agent: `didr/methods.py`) |
 | Account | Blank = `sessions/<agent>.json`; a label = `sessions/<agent>__<label>.json` |
 
 ## Pipeline fills

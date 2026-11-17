@@ -13,6 +13,7 @@ MAX_RATE_LIMIT_WAIT_S = 60 * 60
 
 class ChatGPTFlow(PlatformFlow):
     platform = "chatgpt"
+    USE_STEALTH = True
 
 
     ERASURE_DISPATCH = {
@@ -223,7 +224,13 @@ class ChatGPTFlow(PlatformFlow):
 
     def _delete_conversation(self, token: str, injection_text: str = "", ref: str | None = None) -> None:
         from urllib.parse import urlsplit
-        convo = self.page.query_selector(f'a[href="{urlsplit(ref).path}"]') if ref else None
+        convo = None
+        if ref:
+            # The sidebar's conversation list loads a few seconds after the page.
+            try:
+                convo = self.page.wait_for_selector(f'a[href="{urlsplit(ref).path}"]', timeout=15000)
+            except Exception:
+                convo = None
         if convo is None:
             found_ref = self._find_conversation_by_token(token, "https://chatgpt.com", 'a[href^="/c/"]')
             if not found_ref:
@@ -235,13 +242,33 @@ class ChatGPTFlow(PlatformFlow):
         if convo is None:
             raise RuntimeError("_delete_conversation: no conversation found in sidebar")
         convo.hover()
-        self.page.wait_for_timeout(300)
-        convo.query_selector('[aria-label^="Open conversation options for"]').click(force=True)
         self.page.wait_for_timeout(500)
-        self.page.click('[data-testid="delete-chat-menu-item"]')
-        self.page.wait_for_timeout(500)
-        self.page.click('[data-testid="delete-conversation-confirm-button"]')
-        self.page.wait_for_timeout(1000)
+        # The options button sits in the conversation's row, a few levels above the link.
+        # Use the closest ancestor that has one and holds no other conversation.
+        options = None
+        row = convo
+        for _ in range(6):
+            row = row.evaluate_handle("e => e.parentElement").as_element()
+            if row is None or len(row.query_selector_all('a[href^="/c/"]')) > 1:
+                break
+            options = row.query_selector(
+                'button[aria-label="Chat actions"], [aria-label^="Open conversation options for"]'
+            )
+            if options:
+                break
+        if options is None:
+            raise RuntimeError("_delete_conversation: no options button found for this conversation")
+        options.click(force=True)
+        self.page.wait_for_timeout(600)
+        self.page.get_by_role("menuitem", name="Delete", exact=True).click()
+        self.page.wait_for_timeout(600)
+        confirm = self.page.locator('[data-testid="delete-conversation-confirm-button"]')
+        if confirm.count() == 0:
+            confirm = self.page.locator('[role="dialog"], [role="alertdialog"]').last.get_by_role(
+                "button", name="Delete chat", exact=True
+            )
+        confirm.first.click()
+        self.page.wait_for_timeout(1500)
 
     def _delete_individual_memory_entry(self, token: str, injection_text: str = "", ref: str | None = None) -> None:
         raise NotImplementedError(

@@ -1,6 +1,16 @@
 .env
 sessions/*
 !sessions/.gitkeep
+# Empty placeholders shipped with the artifact. Once filled they hold live
+# login tokens: never commit or share the filled files.
+!sessions/cookies_chatgpt.json
+!sessions/cookies_claude.json
+!sessions/cookies_gemini.json
+!sessions/cookies_copilot.json
+!sessions/cookies_perplexity.json
+!sessions/cookies_deepseek.json
+!sessions/localstorage_copilot.json
+!sessions/localstorage_deepseek.json
 results/*
 !results/.gitkeep
 data/state/

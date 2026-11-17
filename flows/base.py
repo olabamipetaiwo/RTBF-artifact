@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from playwright.sync_api import sync_playwright
+from playwright_stealth import Stealth
 
 from didr import config
 
@@ -20,14 +21,24 @@ class PlatformFlow:
 
     EXTRA_LAUNCH_ARGS: list[str] = []
 
+    # ChatGPT, Claude, Copilot, and Perplexity show a bot check (e.g. Cloudflare's
+    # "Just a moment...") to any browser driven by Playwright, even with a valid
+    # login. playwright-stealth hides the automation signals so the pipeline can
+    # run on your own logged-in account, as in the study. Off by default.
+    USE_STEALTH: bool = False
+
+    def _apply_stealth(self, context) -> None:
+        if self.USE_STEALTH:
+            Stealth().apply_stealth_sync(context)
+
     def __init__(self, headless: bool | None = None, session_label: str | None = None, playwright=None):
         session = config.session_path(self.platform, session_label)
         if not session.exists():
             label_hint = f" --label {session_label}" if session_label else ""
             raise FileNotFoundError(
                 f"No saved session for {self.platform!r}"
-                f"{f' (label {session_label!r})' if session_label else ''} -- run "
-                f"`python login_setup.py {self.platform}{label_hint}` first."
+                f"{f' (label {session_label!r})' if session_label else ''}: follow docs/sessions.md, "
+                f"then run `python import_cookies.py {self.platform}{label_hint.replace('--label', '--account')}`."
             )
         self._session_path = session
         self._headless = config.HEADLESS if headless is None else headless
@@ -47,6 +58,7 @@ class PlatformFlow:
                 args=self.EXTRA_LAUNCH_ARGS or None,
             )
             self._context = self._browser.new_context(storage_state=str(self._session_path))
+            self._apply_stealth(self._context)
             self._prepare_context(self._context)
             self.page = self._context.new_page()
             self.page.goto(config.PLATFORMS[self.platform], wait_until="domcontentloaded")
