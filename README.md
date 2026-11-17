@@ -2,7 +2,7 @@
 
 Artifact for *"I Thought It Was Gone"* (IEEE S&P 2027 submission). DIDR injects a synthetic fact into an LLM agent, applies a deletion method, and checks 30 days later whether the fact can still be recalled. It drives each agent's web interface with Playwright.
 
-> The flows in `flows/` reflect the agents' interfaces as of August–October 2026 and may need updating. The offline stages and tests do not depend on the agents.
+> The flows in `flows/` reflect the agents' interfaces as of August–October 2026. The agents change their pages often, so expect to update a flow now and then; see "When something goes wrong" below. The offline stages and tests do not depend on the agents.
 
 **Not included:** our accounts, sessions, transcripts, results, survey responses, or participant-written deletion requests. The survey questionnaire (questions only) is in `docs/survey_questions.md`.
 
@@ -22,7 +22,7 @@ Test cases are rows in one workbook, `data/DIDR Test Cases.xlsx` (see `docs/work
 
 ## Setup
 
-You need Python 3.11 or later (tested with 3.11.13) and Google Chrome. From the `didr` folder, run the setup script. It creates a virtual environment in `.venv`, installs the pinned dependencies from `requirements.txt`, and downloads the WordNet word list:
+You need Python 3.11 or later (tested with 3.11.13) and Google Chrome. From the repository folder, run the setup script. It creates a virtual environment in `.venv`, installs the pinned dependencies from `requirements.txt`, and downloads the WordNet word list:
 
 ```
 ./setup.sh                       # on Windows: setup.bat
@@ -72,6 +72,10 @@ python pipeline.py sample-requests --requests my_requests.csv --target 20 --floo
 
 **7. Classify the outcomes.** Sometimes the pipeline cannot tell on its own whether a reply contains the fact, and marks it `REVIEW` or `PARTIAL` in the workbook. Read the saved transcript in `results/<agent>/<ID>/`, replace the mark with `TOKEN FOUND (reviewed)` or `NOT FOUND (reviewed)`, and then run `python pipeline.py classify`.
 
+Each command opens a Chrome window and drives it. Leave the window alone until the command finishes; clicking in it or closing it makes the step fail. Transcripts and screenshots of every step are saved in `results/<agent>/<ID>/`.
+
+Agents limit how many messages a free account can send in a day (Copilot allowed about 40 to 60 during the study). Inject and recall in batches of a few dozen test cases, with a pause between batches.
+
 At any point, `python pipeline.py status` shows where each test case is. `delete` and `recall` refuse to run before a test case is due; adding `--force` skips the wait, which is useful only for trying the pipeline out.
 
 ### Deletions done by hand
@@ -84,6 +88,19 @@ Two deletion methods cannot be automated. Do them yourself in your everyday brow
 | Gemini | Clear all conversation history (D3) | Google's activity page rejects automated browsers | Open https://myactivity.google.com/product/gemini, choose **Delete** → **All time**, and confirm |
 
 Some deletion methods, including these two, erase everything on the account, not only the test case's fact. Give each such test case its own account, so it does not wipe out the facts of your other test cases; "Second account" in `docs/sessions.md` explains how.
+
+### When something goes wrong
+
+A failed test case prints `FAILED` and the reason, and is left at its current stage, so you can fix the cause and rerun the same command for that ID.
+
+- **The agent's page has changed.** This is the most common failure. It shows up as `TimeoutError ... waiting for locator(...)` or as a message that a button or conversation was not found. Look at the step's screenshot in `results/<agent>/<ID>/screenshots/`, then update the matching function in `flows/<agent>.py`: `send_message` for typing a message, `read_memory_settings` for the saved-memory page, and, for a deletion, the function that the `ERASURE_DISPATCH` table at the top of the file names for that deletion method. Most fixes only change a button label or a page address. During our own test run in November 2026, ChatGPT, Claude, and Perplexity had each changed at least one of these since the study.
+- **A deletion refuses to run.** When the pipeline cannot find exactly the conversation it injected, it stops instead of deleting the nearest one, so it never deletes another test case's data. Check that the conversation still exists and that the agent's sidebar or library has loaded.
+- **A same-conversation check ended in `ERROR`.** If the cause was technical (for example, the session expired during recall), fix it and run `python pipeline.py recall <ID> --retry-same-conversation`. This repeats only that check, because asking about the fact again in new conversations would change what the agent has seen.
+- **The run reports that the session is logged out.** The session has expired. Export the cookies again and rerun `python import_cookies.py <agent>` (see `docs/sessions.md`). DeepSeek can log a copied session out within an hour, so export its cookies and localStorage just before each stage.
+- **Copilot asks you to "Verify you are human".** Copilot often shows this checkbox after a message is typed. The pipeline prints `>>> ACTION NEEDED` and waits up to five minutes; tick the box in the Chrome window yourself and the run continues. Stay at the screen while running Copilot test cases. The pipeline never ticks the box for you.
+- **Any other bot check ("Just a moment...") appears.** Export fresh cookies from your everyday Chrome and rerun.
+- **The agent replies with an error such as "Something went wrong".** The agent is overloaded or has hit its daily limit. Wait a few hours and rerun; the pipeline does not count such a reply as an answer.
+- **`No space left on device`, or Chrome fails to start.** Each run starts a fresh Chrome profile, which needs some free disk space. Free a few gigabytes and rerun.
 
 ## Claims supported
 

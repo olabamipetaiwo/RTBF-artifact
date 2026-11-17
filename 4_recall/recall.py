@@ -44,6 +44,24 @@ def recall(test_case_id: str, force: bool = False) -> None:
     print(f"{tc.id}: UI {ui_result} | indirect {indirect_result} | direct {direct_result} | same conversation {same_result}")
 
 
+def retry_same_conversation(test_case_id: str) -> None:
+    """Rerun only the same-conversation check after it ended in ERROR (e.g. an expired session).
+
+    The new-conversation checks are not repeated: asking about the fact again
+    would change what the agent has seen.
+    """
+    tc = workbook.get(test_case_id)
+    entry = tracking.get(tc.id) or {}
+    if entry.get("status") != "recalled":
+        raise RuntimeError(f"{tc.id}: expected status 'recalled', found {entry.get('status', 'not injected')!r}")
+    if not str(tc["Same-conversation result"] or "").startswith("ERROR"):
+        raise RuntimeError(f"{tc.id}: same-conversation result is {tc['Same-conversation result']!r}, not ERROR; nothing to retry")
+    with open_flow(tc.agent, tc.account) as flow:
+        same_result = _same_conversation(flow, tc, entry.get("injection_ref"))
+    workbook.update_one(tc.id, {"Same-conversation result": same_result})
+    print(f"{tc.id}: same conversation {same_result}")
+
+
 def _ui_check(flow, agent: str, test_case_id: str, value: str) -> tuple[str, str | None]:
     if not flow.HAS_MEMORY_UI:
         return "N/A (no memory interface)", None

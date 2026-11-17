@@ -79,6 +79,9 @@ def cmd_delete(a) -> None:
 
 def cmd_recall(a) -> None:
     mod = stage("4_recall", "recall")
+    if a.retry_same_conversation:
+        _each(a.ids, mod.retry_same_conversation)
+        return
     ids = a.ids or tracking.due("deleted", "recall_due_at")
     _each(ids, lambda i: mod.recall(i, force=a.force))
 
@@ -140,6 +143,8 @@ def main() -> None:
     s = sub.add_parser("recall", help="stage 4: data recall (default: all due)")
     s.add_argument("ids", nargs="*")
     s.add_argument("--force", action="store_true", help="run before the 30-day wait has passed")
+    s.add_argument("--retry-same-conversation", action="store_true",
+                   help="rerun only the same-conversation check of the given IDs after it ended in ERROR")
     s.set_defaults(fn=cmd_recall)
 
     s = sub.add_parser("classify", help="stage 5: recall outcome classification")

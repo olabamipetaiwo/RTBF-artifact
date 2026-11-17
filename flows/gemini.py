@@ -8,6 +8,7 @@ from didr.recall_scoring import gemini_memory_content
 
 class GeminiFlow(PlatformFlow):
     platform = "gemini"
+    IGNORE_DEFAULT_ARGS = ["--enable-automation"]
     EXTRA_LAUNCH_ARGS = ["--disable-blink-features=AutomationControlled"]
 
     MEMORY_FIELD_INJECTION_TYPES = {"I2"}

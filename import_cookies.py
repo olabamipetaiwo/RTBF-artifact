@@ -78,7 +78,7 @@ def _local_storage(path: Path, origin: str) -> list[dict]:
 
 
 def _report(cookies: list[dict], origins: list[dict], out: Path) -> None:
-    auth = [c["name"] for c in cookies if any(m in c["name"].lower() for m in ("session", "auth", "token"))]
+    auth = [c["name"] for c in cookies if any(m in c["name"].lower() for m in ("session", "auth", "token", "sid"))]
     print(f"Saved {out} ({len(cookies)} cookies, {sum(len(o['localStorage']) for o in origins)} localStorage entries)")
     if not auth:
         print("Warning: no cookie name looks like a login token. Check that you exported while logged in.")

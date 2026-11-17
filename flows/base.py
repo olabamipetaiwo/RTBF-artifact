@@ -20,6 +20,9 @@ class PlatformFlow:
     MEMORY_FIELD_INJECTION_TYPES: set[str] = {"I3"}
 
     EXTRA_LAUNCH_ARGS: list[str] = []
+    # Launch flags to drop. Gemini answers every message with an error when Chrome
+    # carries the "--enable-automation" flag (seen in our November 2026 test run).
+    IGNORE_DEFAULT_ARGS: list[str] = []
 
     # ChatGPT, Claude, Copilot, and Perplexity show a bot check (e.g. Cloudflare's
     # "Just a moment...") to any browser driven by Playwright, even with a valid
@@ -56,6 +59,7 @@ class PlatformFlow:
             self._browser = self._playwright.chromium.launch(
                 headless=self._headless, channel="chrome",
                 args=self.EXTRA_LAUNCH_ARGS or None,
+                ignore_default_args=self.IGNORE_DEFAULT_ARGS or None,
             )
             self._context = self._browser.new_context(storage_state=str(self._session_path))
             self._apply_stealth(self._context)
@@ -75,8 +79,18 @@ class PlatformFlow:
     def _prepare_context(self, context) -> None:
         pass
 
+    SIGN_IN_URL_MARKERS: tuple[str, ...] = ("/sign_in", "/signin", "/login", "/log-in", "/auth/login")
+
+    def _raise_if_signed_out(self) -> None:
+        url = self.page.url.lower()
+        if any(marker in url for marker in self.SIGN_IN_URL_MARKERS):
+            raise RuntimeError(
+                f"{self.platform} session is logged out (redirected to {self.page.url.split('?')[0]}). "
+                f"Export the cookies again and rerun `python import_cookies.py {self.platform}` (docs/sessions.md)."
+            )
+
     def _verify_logged_in(self) -> None:
-        pass
+        self._raise_if_signed_out()
 
     NON_ANSWER_SUBSTRINGS: tuple[str, ...] = (
         "having trouble responding",
@@ -123,6 +137,8 @@ class PlatformFlow:
 
     def open_conversation(self, ref: str) -> None:
         self.page.goto(ref, wait_until="domcontentloaded")
+        self.page.wait_for_timeout(1500)
+        self._raise_if_signed_out()
         last_reply = getattr(self, "_last_reply_text", None)
         if last_reply is None:
             self.page.wait_for_timeout(5000)

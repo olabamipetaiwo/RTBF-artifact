@@ -53,7 +53,7 @@ These two keep part of the login in the page's localStorage, which cookies do no
 
 ## 4. Convert to a session
 
-For each agent:
+With the virtual environment active (`source .venv/bin/activate`, see the README), run this for each agent:
 ```
 python import_cookies.py <agent>
 ```

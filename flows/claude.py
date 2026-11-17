@@ -126,6 +126,18 @@ class ClaudeFlow(PlatformFlow):
         self.page.wait_for_timeout(3000)
         if self.page.query_selector('[placeholder="Tell Claude what to change"]'):
             return
+        # Interface as of Nov 2026: Settings > Your Claude > Your memory > Manage.
+        self.page.goto('https://claude.ai/new#settings/personalization')
+        self.page.wait_for_timeout(3000)
+        dialog = self.page.query_selector('[role="dialog"]')
+        manage = dialog.query_selector('button:has-text("Manage")') if dialog else None
+        if manage:
+            manage.click()
+            try:
+                self.page.wait_for_selector('[placeholder="Tell Claude what to change"]', timeout=10000)
+                return
+            except Exception:
+                pass
         dialog = self.page.query_selector('[role="dialog"]')
         if dialog:
             mem_item = dialog.query_selector('li:has-text("Memory")')

@@ -26,12 +26,19 @@ class PerplexityFlow(PlatformFlow):
     }
 
     def _dismiss_cookie_banner(self) -> None:
-        for text in ("Got it", "Allow all"):
+        for text in ("Got it", "Allow all", "Decline optional"):
             btn = self.page.query_selector(f'button:has-text("{text}")')
             if btn:
                 btn.click(force=True)
                 self.page.wait_for_timeout(500)
                 return
+
+    def _click_input(self) -> None:
+        # The input lost its "ask-input" id in late 2026; fall back to the editable box.
+        box = self.page.locator('#ask-input')
+        if box.count() == 0:
+            box = self.page.locator('[contenteditable="true"]')
+        box.first.click(force=True)
 
     def new_conversation(self) -> None:
         self.page.goto("https://www.perplexity.ai/")
@@ -42,7 +49,7 @@ class PerplexityFlow(PlatformFlow):
         self._dismiss_cookie_banner()
         before = len(self._top_level_reply_texts())
 
-        self.page.locator('#ask-input').click(force=True)
+        self._click_input()
         self.page.keyboard.type(text)
         self.page.wait_for_timeout(500)
         self.page.locator('button[aria-label="Submit"]').click(force=True)
@@ -114,7 +121,7 @@ class PerplexityFlow(PlatformFlow):
         self.page.wait_for_timeout(2000)
 
         if caption:
-            self.page.locator('#ask-input').click(force=True)
+            self._click_input()
             self.page.keyboard.type(caption)
             self.page.wait_for_timeout(500)
 
@@ -150,24 +157,33 @@ class PerplexityFlow(PlatformFlow):
     def _delete_single_thread(
         self, token: str | None = None, injection_text: str = "", ref: str | None = None
     ) -> None:
+        if ref:
+            # Delete from the thread's own page: its header has exactly one
+            # "Session options" button, which belongs to this thread only.
+            from urllib.parse import urlsplit
+            self.page.goto(ref)
+            self.page.wait_for_timeout(4000)
+            self._dismiss_cookie_banner()
+            if urlsplit(self.page.url).path != urlsplit(ref).path:
+                raise RuntimeError(f"_delete_single_thread: session {ref!r} did not open (already deleted?)")
+            header_btns = [
+                b for b in self.page.query_selector_all('button[aria-label="Session options"]') if b.is_visible()
+            ]
+            if len(header_btns) != 1:
+                raise RuntimeError(
+                    f"_delete_single_thread: expected 1 options button on the session page, found {len(header_btns)}"
+                )
+            header_btns[0].click()
+            self._confirm_delete()
+            return
         self.page.goto("https://www.perplexity.ai/library")
         self.page.wait_for_timeout(2000)
         self._dismiss_cookie_banner()
         opt_btns = self.page.query_selector_all('button[aria-label="Session options"]')
         if not opt_btns:
             raise RuntimeError("_delete_single_thread: no sessions found to delete")
-        links = self.page.query_selector_all('a[href*="/search/"]')
-        hrefs = [link.get_attribute("href") for link in links]
-
         idx = None
-        if ref:
-            from urllib.parse import urlsplit
-            ref_path = urlsplit(ref).path
-            matches = [i for i, href in enumerate(hrefs) if href == ref_path]
-            if not matches:
-                raise RuntimeError(f"_delete_single_thread: expected session {ref!r} not found in /library")
-            idx = matches[0]
-        elif token or injection_text:
+        if token or injection_text:
             row_texts = self.page.evaluate("""() => {
                 const btns = [...document.querySelectorAll('button[aria-label="Session options"]')];
                 return btns.map(b => {
@@ -191,13 +207,16 @@ class PerplexityFlow(PlatformFlow):
             raise RuntimeError("_delete_single_thread: no ref or token/injection_text to target a row with")
 
         opt_btns[idx].click(force=True)
+        self._confirm_delete()
+
+    def _confirm_delete(self) -> None:
         self.page.wait_for_timeout(500)
         self.page.get_by_role("menuitem", name="Delete", exact=True).click()
         self.page.wait_for_timeout(800)
         self.page.locator('[role="dialog"], [role="alertdialog"]').last.get_by_role(
             "button", name="Delete", exact=True
         ).click(force=True)
-        self.page.wait_for_timeout(1000)
+        self.page.wait_for_timeout(1500)
 
     def _delete_all_threads(
         self, token: str | None = None, injection_text: str = "", ref: str | None = None

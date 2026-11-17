@@ -176,6 +176,30 @@ def test_recall_order_and_scoring(wb_path, monkeypatch):
     assert tc["Same-conversation result"].startswith("TOKEN FOUND")  # decides D1 outcome
 
 
+def test_retry_same_conversation_reruns_only_that_check(wb_path, monkeypatch):
+    pipeline.stage("1_fact_generation", "generate_facts").generate()
+    tc = workbook.get("CH-01")
+    recall = pipeline.stage("4_recall", "recall")
+    flow = FakeFlow({tc["Direct recall prompt"]: "I don't know."}, "Memory summary | Saved memories | likes tea")
+    monkeypatch.setattr(recall, "open_flow", lambda agent, account: flow)
+    monkeypatch.setattr(recall, "save_screenshot", lambda *a, **k: None)
+    monkeypatch.setattr(recall, "save_json", lambda *a, **k: None)
+    tracking.mark_injected("CH-01", "https://example/chat/1")
+    tracking.mark_deleted("CH-01")
+    tracking.mark_recalled("CH-01")
+    workbook.update_one("CH-01", {"Same-conversation result": "ERROR (RuntimeError: logged out)",
+                                  "Direct recall result": "NOT FOUND (auto)"})
+    recall.retry_same_conversation("CH-01")
+
+    msgs = [e for e in flow.events if e != "new" and not e.startswith("goto")]
+    assert msgs == ["open:https://example/chat/1", f"msg:{tc['Direct recall prompt']}"]
+    tc = workbook.get("CH-01")
+    assert tc["Same-conversation result"] == "NOT FOUND (auto)"
+    assert tc["Direct recall result"] == "NOT FOUND (auto)"
+    with pytest.raises(RuntimeError, match="not ERROR"):
+        recall.retry_same_conversation("CH-01")
+
+
 D1 = "deletion-request prompt"
 D2 = "delete a single conversation"
 
