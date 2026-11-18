@@ -21,7 +21,7 @@ Steps 1 and 2 are the minimal working example. Step 3 is a scaled-down version o
 
 **Requirements.** macOS, Windows, or Linux with a desktop, Google Chrome, Python 3.11 or later (tested with 3.11.13), an internet connection, and about 1 GB of free disk space. Steps 3 and 4 open a visible Chrome window, so they need a desktop session and cannot run on a headless server or shared research infrastructure; several agents refuse to work in a browser without a window. Steps 1 and 2 run anywhere.
 
-**Not included.** Our accounts, login sessions, transcripts, and results; survey responses; and participant-written deletion requests (they are participant data). The survey questions are in `docs/survey_questions.md`. The agents themselves are third-party online services.
+**Scope and what is not included.** The paper has two parts: a user survey (Section 3) and the DIDR experiments (Section 4). This artifact covers the DIDR experiments. The survey part is represented by its questionnaire (`docs/survey_questions.md`); the survey responses are not included because they are participant data, and neither are the analyses, which run only on those responses. Also not included are participant-written deletion requests (participant data) and our accounts, login sessions, transcripts, and results. The agents themselves are third-party online services.
 
 **Agents change.** The code in `flows/` matches the agents' web pages as of August–October 2026. The agents change their pages often, so a step may need a small update to a button label or page address; "When something goes wrong" below explains how to spot and fix this.
 
