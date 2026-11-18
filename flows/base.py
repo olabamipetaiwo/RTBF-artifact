@@ -75,6 +75,12 @@ class PlatformFlow:
     SIGN_IN_URL_MARKERS: tuple[str, ...] = ("/sign_in", "/signin", "/login", "/log-in", "/auth/login")
 
     def _raise_if_signed_out(self) -> None:
+        # Some agents start on their login page and redirect a logged-in session
+        # to the app, so allow a few seconds for that redirect first.
+        for _ in range(10):
+            if not any(marker in self.page.url.lower() for marker in self.SIGN_IN_URL_MARKERS):
+                return
+            self.page.wait_for_timeout(1000)
         url = self.page.url.lower()
         if any(marker in url for marker in self.SIGN_IN_URL_MARKERS):
             raise RuntimeError(

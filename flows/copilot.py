@@ -100,9 +100,9 @@ class CopilotFlow(PlatformFlow):
         )
         if walled:
             raise RuntimeError(
-                f"copilot session (label={getattr(self, '_session_path', '?')!r}) is logged out -- "
-                f"sign-in wall at {url.split('?')[0]}. Needs a fresh cookie export taken from the "
-                f"copilot.com tab (import with --origin https://copilot.com)."
+                f"copilot session is logged out (sign-in page at {url.split('?')[0]}). Log in again in your "
+                f"Chrome window (README, \"Copilot in your own Chrome\"), or export the cookies again and rerun "
+                f"`python scripts/import_cookies.py copilot` (docs/sessions.md)."
             )
 
     def new_conversation(self) -> None:

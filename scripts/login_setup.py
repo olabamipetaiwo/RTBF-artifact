@@ -206,8 +206,8 @@ if __name__ == "__main__":
     args = [a for a in args if a not in ("--from-chrome-profile", "--auto")]
 
     if len(args) != 1 or args[0] not in config.PLATFORMS:
-        print(f"Usage: python scripts/login_setup.py <platform> [--from-chrome-profile [--profile <Chrome profile folder>]] [--auto] [--label <name>]")
-        print(f"--profile is the folder name under Chrome's user-data dir that holds your login (see 'Profile Path' at chrome://version); default 'Default'.")
+        print("Usage: python scripts/login_setup.py <platform> [--from-chrome-profile [--profile <Chrome profile folder>]] [--auto] [--label <name>]")
+        print("--profile is the folder name under Chrome's user-data dir that holds your login (see 'Profile Path' at chrome://version); default 'Default'.")
         print(f"Platforms: {list(config.PLATFORMS)}")
         print("--label names an additional account for the same agent (the workbook's Account column).")
         sys.exit(1)

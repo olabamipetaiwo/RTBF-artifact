@@ -32,8 +32,8 @@ class GeminiFlow(PlatformFlow):
     def _verify_logged_in(self) -> None:
         if self.page.get_by_role("button", name="Sign in", exact=True).count() > 0:
             raise RuntimeError(
-                f"gemini session (label={getattr(self, '_session_path', '?')!r}) is logged out -- "
-                f"'Sign in' button present. Needs a fresh cookie export before this account can run."
+                "gemini session is logged out ('Sign in' button on the page). Export the cookies again and "
+                "rerun `python scripts/import_cookies.py gemini` (docs/sessions.md)."
             )
 
     def _goto_fresh(self, url: str) -> None:
