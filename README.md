@@ -65,7 +65,23 @@ Quick check passed.
 
 This runs two test cases per agent from `examples/quick_live.csv`: one where the fact is deleted by asking the agent to forget it (D1), and one where the conversation is deleted (D2). You can run any subset of agents. Use test accounts that you own, not your personal accounts: the pipeline writes into the account's conversations and memory.
 
-**Log in.** For each agent you want to run, follow `docs/sessions.md`. In short: log in to the agent in your everyday Chrome, export its cookies with the Cookie-Editor extension into the empty file `sessions/cookies_<agent>.json`, and run `python scripts/import_cookies.py <agent>`. For Copilot, open your own Chrome window instead ("Copilot in your own Chrome" below).
+**Log in.** For each agent you want to run, follow `docs/sessions.md`. In short: 
+- log in to the agent in your everyday Chrome, export its cookies with the Cookie-Editor extension into the empty file `sessions/cookies_<agent>.json`
+- run `python scripts/import_cookies.py <agent>`. 
+
+For Copilot, open your own Chrome window instead. On macOS:
+
+```
+open -na "Google Chrome" --args --remote-debugging-port=9222 --user-data-dir="$HOME/didr-chrome"
+```
+
+In that window, log in at https://copilot.com and leave the tab open. Then, in the terminal where you run the pipeline:
+
+```
+export DIDR_COPILOT_CDP=http://localhost:9222
+```
+
+The commands for Windows and Linux are in "Copilot in your own Chrome" below.
 
 **Run.** Create a workbook with the quick-run test cases, then run the stages. Replace the IDs with the ones for your agents (`Q-CH` ChatGPT, `Q-CL` Claude, `Q-GE` Gemini, `Q-CO` Copilot, `Q-PE` Perplexity, `Q-DE` DeepSeek):
 
@@ -87,9 +103,12 @@ Each command opens Chrome and works through the agent's page; leave the window a
 | `recall --force` | `Q-CH-1: UI NOT FOUND (auto) \| indirect ... \| direct ... \| same conversation ...` | Every recall prompt and reply, and the saved-memory page |
 | `classify` | `recall failed: 1, recall success: 1` (for example) | The outcome in the workbook's `Recall outcome` column |
 
-Results are in `data/DIDR Test Cases.xlsx` (one row per test case) and `results/<agent>/<ID>/` (transcripts and screenshots). Whether a given test case ends in recall success or recall failed depends on the agent's behaviour on the day, so the outcome may differ from the paper's; what the run demonstrates is that each stage works and that the outcome follows the paper's rule. Run `python scripts/pipeline.py init --design ... --overwrite` to start a fresh workbook.
+Results are in `data/DIDR Test Cases.xlsx` (one row per test case) and `results/<agent>/<ID>/` (transcripts and screenshots). 
+What the run demonstrates is that each stage works and that the outcome follows the paper's rule. 
+Run `python scripts/pipeline.py init --design ... --overwrite` to start a fresh workbook.
 
-If recall marks a reply `REVIEW` or `PARTIAL`, the pipeline could not decide on its own whether the reply contains the fact. Read the transcript, replace the mark in the workbook with `TOKEN FOUND (reviewed)` or `NOT FOUND (reviewed)`, and run `classify` again.
+If recall marks a reply `REVIEW` or `PARTIAL`, the pipeline could not decide on its own whether the reply contains the fact. 
+Read the transcript, replace the mark in the workbook with `TOKEN FOUND (reviewed)` or `NOT FOUND (reviewed)`, and run `classify` again.
 
 ## 4. Full study run (optional)
 
@@ -132,7 +151,10 @@ After deletion, `recall` runs these checks in order:
 3. **Direct recall:** in another new conversation, two prompts asking for the fact ("what did I name my houseplant?").
 4. **Same-conversation check (D1 only):** the direct prompt again, in the conversation where the deletion was requested.
 
-A D1 test case is *recall success* if the same-conversation check returns the fact. A D2–D6 test case is *recall success* if any of checks 1–3 does. Everything else is *recall failed*. This is the rule in the paper's Section 4.
+A D1 test case is *recall success* if the same-conversation check returns the fact. 
+A D2–D6 test case is *recall success* if any of checks 1–3 does. 
+
+Everything else is *recall failed*. This is the rule in the paper's Section 4.
 
 ### What the paper claims and where it is implemented
 
@@ -192,9 +214,6 @@ Copilot shows a "Verify you are human" check to every browser the pipeline launc
 
 The setting lasts until you close the terminal and affects only Copilot. The pipeline uses whichever account is logged in to that window. If "Verify you are human" still appears, tick it in the window; the pipeline prints `>>> ACTION NEEDED` and waits up to five minutes. It never ticks the box itself.
 
-### Bot checks
-
-ChatGPT, Claude, Copilot, and Perplexity show a bot check (such as Cloudflare's "Just a moment..." page) to any browser that Playwright launches, even when you are logged in. For these agents the pipeline uses `playwright-stealth`, which hides the signs of automation so that it can run on your own logged-in account, as in the study. It is installed with the other dependencies. Gemini only needs Chrome's automation flag turned off, which the pipeline does; DeepSeek needs neither.
 
 ### When something goes wrong
 
