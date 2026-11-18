@@ -7,7 +7,7 @@ from .base import PlatformFlow
 
 class PerplexityFlow(PlatformFlow):
     platform = "perplexity"
-    USE_STEALTH = True
+    RUNTIME_PROFILE = True
 
 
     HAS_MEMORY_UI = False

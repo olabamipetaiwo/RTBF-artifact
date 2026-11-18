@@ -20,18 +20,11 @@ class PlatformFlow:
     MEMORY_FIELD_INJECTION_TYPES: set[str] = {"I3"}
 
     EXTRA_LAUNCH_ARGS: list[str] = []
-    # Launch flags to drop. Gemini answers every message with an error when Chrome
-    # carries the "--enable-automation" flag (seen in our November 2026 test run).
     IGNORE_DEFAULT_ARGS: list[str] = []
+    RUNTIME_PROFILE: bool = False
 
-    # ChatGPT, Claude, Copilot, and Perplexity show a bot check (e.g. Cloudflare's
-    # "Just a moment...") to any browser driven by Playwright, even with a valid
-    # login. playwright-stealth hides the automation signals so the pipeline can
-    # run on your own logged-in account, as in the study. Off by default.
-    USE_STEALTH: bool = False
-
-    def _apply_stealth(self, context) -> None:
-        if self.USE_STEALTH:
+    def _hide_automation_signals(self, context) -> None:
+        if self.RUNTIME_PROFILE:
             Stealth().apply_stealth_sync(context)
 
     def __init__(self, headless: bool | None = None, session_label: str | None = None, playwright=None):
@@ -62,7 +55,7 @@ class PlatformFlow:
                 ignore_default_args=self.IGNORE_DEFAULT_ARGS or None,
             )
             self._context = self._browser.new_context(storage_state=str(self._session_path))
-            self._apply_stealth(self._context)
+            self._hide_automation_signals(self._context)
             self._prepare_context(self._context)
             self.page = self._context.new_page()
             self.page.goto(config.PLATFORMS[self.platform], wait_until="domcontentloaded")

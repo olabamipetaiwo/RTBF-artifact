@@ -13,7 +13,7 @@ MAX_RATE_LIMIT_WAIT_S = 60 * 60
 
 class ChatGPTFlow(PlatformFlow):
     platform = "chatgpt"
-    USE_STEALTH = True
+    RUNTIME_PROFILE = True
 
 
     ERASURE_DISPATCH = {

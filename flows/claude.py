@@ -13,7 +13,7 @@ MAX_LIMIT_WAIT_S = 5 * 3600 + 15 * 60
 
 class ClaudeFlow(PlatformFlow):
     platform = "claude"
-    USE_STEALTH = True
+    RUNTIME_PROFILE = True
 
     ERASURE_DISPATCH = {
         "Delete conversation": "_delete_conversation",
