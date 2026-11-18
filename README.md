@@ -40,6 +40,8 @@ setup.bat
 .venv\Scripts\activate
 ```
 
+The script ends with `Done. Activate the environment with: ...`. It stops if your default Python is older than 3.11; on macOS or Linux, point it at a newer one with `PYTHON=python3.11 ./setup.sh` (on Windows, the `python` on your PATH must be 3.11 or later). Running it again is safe and keeps any login files you have filled in.
+
 Activate the environment the same way in every new terminal before running any command below.
 
 ## 2. Quick check (no accounts)
@@ -65,9 +67,10 @@ Quick check passed.
 
 This runs two test cases per agent from `examples/quick_live.csv`: one where the fact is deleted by asking the agent to forget it (D1), and one where the conversation is deleted (D2). You can run any subset of agents. Use test accounts that you own, not your personal accounts: the pipeline writes into the account's conversations and memory.
 
-**Log in.** For each agent you want to run, follow `docs/sessions.md`. In short: 
-- log in to the agent in your everyday Chrome, export its cookies with the Cookie-Editor extension into the empty file `sessions/cookies_<agent>.json`
-- run `python scripts/import_cookies.py <agent>`. 
+**Log in.** For each agent you want to run, follow `docs/sessions.md`. In short:
+1. Log in to the agent in your everyday Chrome.
+2. Export its cookies with the Cookie-Editor extension into the empty file `sessions/cookies_<agent>.json`.
+3. Run `python scripts/import_cookies.py <agent>`.
 
 For Copilot, open your own Chrome window instead. On macOS:
 
@@ -103,12 +106,9 @@ Each command opens Chrome and works through the agent's page; leave the window a
 | `recall --force` | `Q-CH-1: UI NOT FOUND (auto) \| indirect ... \| direct ... \| same conversation ...` | Every recall prompt and reply, and the saved-memory page |
 | `classify` | `recall failed: 1, recall success: 1` (for example) | The outcome in the workbook's `Recall outcome` column |
 
-Results are in `data/DIDR Test Cases.xlsx` (one row per test case) and `results/<agent>/<ID>/` (transcripts and screenshots). 
-What the run demonstrates is that each stage works and that the outcome follows the paper's rule. 
-Run `python scripts/pipeline.py init --design ... --overwrite` to start a fresh workbook.
+Results are in `data/DIDR Test Cases.xlsx` (one row per test case) and `results/<agent>/<ID>/` (transcripts and screenshots). The run shows that each stage works on the live agent and that the outcome follows the paper's rule; whether a test case ends in recall success or recall failed depends on the agent's behaviour on the day. Run `python scripts/pipeline.py init --design ... --overwrite` to start a fresh workbook.
 
-If recall marks a reply `REVIEW` or `PARTIAL`, the pipeline could not decide on its own whether the reply contains the fact. 
-Read the transcript, replace the mark in the workbook with `TOKEN FOUND (reviewed)` or `NOT FOUND (reviewed)`, and run `classify` again.
+If recall marks a reply `REVIEW` or `PARTIAL`, the pipeline could not decide on its own whether the reply contains the fact. Read the transcript, replace the mark in the workbook with `TOKEN FOUND (reviewed)` or `NOT FOUND (reviewed)`, and run `classify` again.
 
 ## 4. Full study run (optional)
 
@@ -151,10 +151,7 @@ After deletion, `recall` runs these checks in order:
 3. **Direct recall:** in another new conversation, two prompts asking for the fact ("what did I name my houseplant?").
 4. **Same-conversation check (D1 only):** the direct prompt again, in the conversation where the deletion was requested.
 
-A D1 test case is *recall success* if the same-conversation check returns the fact. 
-A D2–D6 test case is *recall success* if any of checks 1–3 does. 
-
-Everything else is *recall failed*. This is the rule in the paper's Section 4.
+A D1 test case is *recall success* if the same-conversation check returns the fact, and a D2–D6 test case if any of checks 1–3 does. Everything else is *recall failed*. This is the rule in the paper's Section 4.
 
 ### What the paper claims and where it is implemented
 
@@ -213,7 +210,6 @@ Copilot shows a "Verify you are human" check to every browser the pipeline launc
    Windows (PowerShell): `$env:DIDR_COPILOT_CDP = "http://localhost:9222"`
 
 The setting lasts until you close the terminal and affects only Copilot. The pipeline uses whichever account is logged in to that window. If "Verify you are human" still appears, tick it in the window; the pipeline prints `>>> ACTION NEEDED` and waits up to five minutes. It never ticks the box itself.
-
 
 ### When something goes wrong
 
